@@ -1,7 +1,7 @@
 {
   "name": "Dr. Nuellie’s Money Diary",
   "short_name": "Money Diary",
-  "description": "A private personal finance diary for tracking income, expenses, wallets, assets, investments, goals and reports.",
+  "description": "A private personal finance diary for tracking income, expenses, wallets, assets, investments, goals, statements and reports.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
