@@ -1,0 +1,74 @@
+{
+  "name": "Dr. Nuellie\u2019s Money Diary",
+  "short_name": "Money Diary",
+  "description": "A private personal finance diary for tracking income, expenses, wallets, assets, investments, goals, statements and reports.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#AD1457",
+  "background_color": "#FDF5FA",
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./index.html",
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "sms_title",
+      "text": "sms_text",
+      "url": "sms_url"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Parse SMS",
+      "short_name": "Parse SMS",
+      "description": "Open the SMS Parser",
+      "url": "./index.html?tool=sms",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Quick Add",
+      "short_name": "Quick Add",
+      "description": "Quickly add a transaction",
+      "url": "./index.html?action=quickadd",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
