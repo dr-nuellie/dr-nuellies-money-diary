@@ -1,7 +1,10 @@
-# Change log
+# My Money Diary — focused update
 
-2026-10-25 — Subscriptions, unlock and landscape polish
-- Wider service-name/details space and narrower amount column in My Subscriptions, with mobile action buttons below details.
-- Full-viewport unlock overlay adapted for iOS PWA safe areas; subtle theme-aware animated currency glyphs.
-- Section-description typography remains consistent after landscape rotation.
-- Updated service worker cache. No changes to finance calculations or other page layouts.
+Baseline: my_money_diary_investment_value_subscription_edit_logo.zip.
+
+Only three requested areas changed:
+- Unified unlock screen: its viewport-fit mode is enabled only while locked, then the original viewport setting is restored before showing the app. Background has 28 faint rounded currency glyphs, with reduced-motion support.
+- My Subscriptions: compact Edit/Pause-Resume/Delete buttons in the existing row.
+- My Subscriptions: category-specific icons from saved subscription categories; fallback for custom categories.
+
+The global page layout, landscape fonts, chart styles, all finance calculations, account data model and other screens were taken unchanged from the baseline.

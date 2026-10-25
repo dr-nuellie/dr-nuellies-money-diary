@@ -42,7 +42,7 @@ function formatDateDMY(raw){
 }
 </script>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover" name="viewport"/>
+<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0" name="viewport"/>
 <title>My Money Diary</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -74,7 +74,6 @@ body.dark-mode{
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:var(--app-font-size,14px)!important;}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 .app-shell{display:flex;min-height:100vh;}
 /* SIDEBAR */
 .sidebar{width:var(--sb-w);min-height:100vh;background:#fff;border-right:1.5px solid var(--bdr);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;z-index:100;transition:transform .25s;}
@@ -5103,6 +5102,29 @@ function editSub(id){
   document.getElementById('editModal').classList.add('open');
 }
 
+function subscriptionCategoryIcon(category){
+  const c=String(category||'Other').toLowerCase().trim();
+  const exact={
+    'streaming':'🎬','music':'🎵','cloud storage':'☁️',
+    'software / saas':'💻','news / magazines':'📰','fitness / health':'🏃',
+    'gaming':'🎮','education':'📚','business tools':'💼','other':'🧾'
+  };
+  if(Object.prototype.hasOwnProperty.call(exact,c))return exact[c];
+  if(/stream|video|film|tv|movie|netflix/.test(c))return '🎬';
+  if(/music|audio|podcast/.test(c))return '🎵';
+  if(/cloud|storage|backup|drive/.test(c))return '☁️';
+  if(/software|saas|app|tech|digital/.test(c))return '💻';
+  if(/news|magazine|press|read/.test(c))return '📰';
+  if(/gym|fitness|health|wellness|sport/.test(c))return '🏃';
+  if(/game|play/.test(c))return '🎮';
+  if(/education|learning|course|school/.test(c))return '📚';
+  if(/business|work|productivity/.test(c))return '💼';
+  if(/utility|electric|power|water|internet|mobile|phone/.test(c))return '💡';
+  if(/family|support|charity|donat/.test(c))return '🤝';
+  if(/insurance|protect/.test(c))return '🛡️';
+  return '🧾';
+}
+
 function renderSubs(){
   const subs=S.subscriptions||[],active=subs.filter(s=>s.active!==false);
   const mo=active.reduce((t,s)=>t+subMonthly(s),0);
@@ -5115,17 +5137,17 @@ function renderSubs(){
   if(!subs.length){el.innerHTML='<div class="empty"><div class="big">📺</div><p>No subscriptions yet.</p></div>';return;}
   const FL={monthly:'Monthly',weekly:'Weekly',quarterly:'Quarterly',biannual:'Bi-annual',annual:'Annual'};
   el.innerHTML=subs.map(s=>`<div class="txi subscription-row" style="${s.active===false?'opacity:.55':''}">
-    <div class="txico" style="background:var(--pu-p)">📺</div>
+    <div class="txico subscription-category-icon" style="background:var(--pu-p)" title="${esc(s.cat||'Other')}" aria-label="${esc(s.cat||'Other')}">${subscriptionCategoryIcon(s.cat)}</div>
     <div class="txi-info">
       <div class="txi-name">${esc(s.name)} <span class="badge ${s.active===false?'bre':'bpu'}">${s.active===false?'Paused':'Active'}</span></div>
       <div class="txi-cat">${FL[s.frequency||s.freq]||s.frequency||s.freq} · Due: ${s.due?formatDateDMY(s.due):'—'} · ${esc(s.wallet)}</div>
       ${s.notes?`<div class="txi-cat">${esc(s.notes)}</div>`:''}${(()=>{const v=subValueText(s);return `<div class="txi-cat ${v.low?'low-value':''}" style="display:inline-block;padding:3px 7px;border-radius:8px;border:1px solid var(--bdr);margin-top:3px;">${esc(s.useFrequency||'Weekly')} use · ${v.txt}${v.low?' · Low-value alert':''}</div>`})()}
     </div>
-    <div class="subscription-amount">
+    <div style="text-align:right;flex-shrink:0;">
       <div class="txi-amt aout">${s.currency==='USD'?'$'+Number(s.rawAmount||s.amtRaw||s.amount||0).toFixed(2)+' ':''}${s.currency==='USD'?'('+fmt(s.amount)+')':fmt(s.amount)}</div>
       <div class="txi-date">${fmt(subMonthly(s))}/mo</div>
     </div>
-    <div class="subscription-actions">
+    <div class="subscription-compact-actions" style="display:flex;gap:3px;flex-shrink:0;">
       <button type="button" class="btn btn-out btn-xs" onclick="editSub(${s.id})" title="Edit subscription" aria-label="Edit subscription">✏️</button>
       <button class="btn btn-out btn-xs" onclick="toggleSub(${s.id})" title="${s.active===false?'Resume':'Pause'}">${s.active===false?'▶':'⏸'}</button>
       <button title="✕" aria-label="✕" class="btn btn-re btn-xs" onclick="delSub(${s.id})">✕</button>
@@ -9161,91 +9183,58 @@ html:not(.nuellie-force-locked) #pinOverlay{display:none!important;visibility:hi
 html.nuellie-unlocked,html.nuellie-unlocked body{pointer-events:auto!important;}
 html.nuellie-unlocked .app-shell,html.nuellie-unlocked .fab-add,html.nuellie-unlocked .bottom-mobile-nav{visibility:visible!important;opacity:1!important;pointer-events:auto!important;}
 
-/* My Subscriptions: distribute space to names/details instead of the amount. */
-#subList .subscription-row{
-  display:grid; grid-template-columns:34px minmax(0,1fr) minmax(78px,108px) auto;
-  gap:8px; align-items:center; width:100%; max-width:100%;
-}
-#subList .subscription-row .txi-info{min-width:0;overflow-wrap:anywhere;}
-#subList .subscription-row .txi-name{
-  white-space:normal;overflow:visible;text-overflow:clip;
-  overflow-wrap:anywhere;line-height:1.35;
-}
-#subList .subscription-amount{text-align:right;min-width:0;max-width:108px;}
-#subList .subscription-amount .txi-amt{
-  font-size:11.5px!important;line-height:1.25;white-space:normal;
-  overflow-wrap:anywhere;font-variant-numeric:tabular-nums;
-}
-#subList .subscription-amount .txi-date{font-size:9px;overflow-wrap:anywhere;}
-#subList .subscription-actions{display:flex;gap:3px;flex:0 0 auto;justify-content:flex-end;}
-@media(max-width:650px){
- #subList .subscription-row{grid-template-columns:28px minmax(0,1fr) minmax(70px,88px);gap:6px;align-items:start;}
- #subList .subscription-row>.txico{width:28px;height:28px;}
- #subList .subscription-amount{max-width:88px;}
- #subList .subscription-actions{grid-column:2 / 4;grid-row:2;justify-content:flex-end;margin-top:0;}
- #subList .subscription-row .txi-name{font-size:12.5px;}
-}
-
-/* Do not let iOS landscape text autosizing enlarge description paragraphs. */
-@media(orientation:landscape){
- .sec-desc,.action-desc,.calc-note,.dashboard-auto-desc{
-   font-size:11.5px!important;line-height:1.5!important;font-weight:400!important;
-   -webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;
- }
-}
-
-/* Preserve the app's original layout while allowing the unlock-only overlay
-   to extend behind the iPhone status bar in an installed PWA. */
-@supports (padding-top:env(safe-area-inset-top)){
- @media(display-mode:standalone){
-   body>.app-shell{padding-top:env(safe-area-inset-top,0px)!important;}
-   html:not(.app-secure-pending):not(.nuellie-force-locked):not(.app-secure-checking)::before{
-      content:'';position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
-      background:var(--hdr);pointer-events:none;z-index:89;
-   }
- }
-}
+/* These rules affect ONLY the unlock overlay and its decorative symbols. */
 #nuellieUnifiedUnlock{
+  position:fixed!important;inset:0!important;top:0!important;left:0!important;
   width:100vw!important;height:100dvh!important;min-height:100vh!important;
-  top:0!important;right:0!important;bottom:0!important;left:0!important;
   max-width:none!important;max-height:none!important;
+  box-sizing:border-box!important;
   padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px))!important;
   overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain;
 }
-#nuellieUnifiedUnlock .unlock-card{z-index:2;max-height:100%;overflow-y:auto;overscroll-behavior:contain;}
+#nuellieUnifiedUnlock .unlock-card{
+  position:relative;z-index:2;max-height:100%;overflow-y:auto;overscroll-behavior:contain;
+}
 #nuellieUnifiedUnlock .unlock-currency-field{
-  position:absolute;inset:0;overflow:hidden;pointer-events:none!important;z-index:1;
+  position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none!important;
 }
 #nuellieUnifiedUnlock .unlock-currency-symbol{
-  position:absolute;display:block;color:var(--pu);font-family:Georgia,serif;
-  font-weight:700;opacity:.11;font-size:clamp(23px,5vw,51px);
-  line-height:1;will-change:transform;
-  animation:nuellieCurrencyDrift 13s ease-in-out infinite alternate;
+  position:absolute;top:var(--cy);left:var(--cx);
+  font-family:'Nunito','Arial Rounded MT Bold',ui-rounded,system-ui,sans-serif;
+  font-size:var(--cs,30px);font-weight:900;line-height:1;
+  color:var(--pu);opacity:.095;user-select:none;pointer-events:none!important;
+  animation:nuellieCurrencyGentleDrift var(--ct,17s) ease-in-out var(--cd,0s) infinite alternate;
 }
-#nuellieUnifiedUnlock .unlock-currency-1{left:6%;top:9%;animation-delay:-2s;}
-#nuellieUnifiedUnlock .unlock-currency-2{left:81%;top:15%;animation-delay:-7s;font-size:33px;}
-#nuellieUnifiedUnlock .unlock-currency-3{left:14%;top:37%;animation-delay:-4s;font-size:27px;}
-#nuellieUnifiedUnlock .unlock-currency-4{left:88%;top:39%;animation-delay:-9s;}
-#nuellieUnifiedUnlock .unlock-currency-5{left:9%;top:66%;animation-delay:-6s;font-size:35px;}
-#nuellieUnifiedUnlock .unlock-currency-6{left:76%;top:79%;animation-delay:-3s;font-size:42px;}
-#nuellieUnifiedUnlock .unlock-currency-7{left:27%;top:85%;animation-delay:-8s;font-size:29px;}
-#nuellieUnifiedUnlock .unlock-currency-8{left:55%;top:7%;animation-delay:-5s;font-size:25px;}
-#nuellieUnifiedUnlock .unlock-currency-9{left:47%;top:92%;animation-delay:-11s;font-size:22px;}
-#nuellieUnifiedUnlock .unlock-currency-10{left:93%;top:67%;animation-delay:-1s;font-size:26px;}
-#nuellieUnifiedUnlock .unlock-currency-11{left:4%;top:88%;animation-delay:-10s;font-size:23px;}
-#nuellieUnifiedUnlock .unlock-currency-12{left:71%;top:56%;animation-delay:-12s;font-size:30px;}
-@keyframes nuellieCurrencyDrift{
-  0%{transform:translate3d(0,8px,0) rotate(-12deg);opacity:.065;}
-  50%{opacity:.14;}
-  100%{transform:translate3d(13px,-24px,0) rotate(9deg);opacity:.085;}
+@keyframes nuellieCurrencyGentleDrift{
+  0%{transform:translate3d(-4px,10px,0) rotate(-9deg);opacity:.045;}
+  50%{opacity:.11;}
+  100%{transform:translate3d(12px,-21px,0) rotate(10deg);opacity:.075;}
 }
-@media(max-width:700px){
-  #nuellieUnifiedUnlock .unlock-currency-symbol{font-size:25px;opacity:.095;}
+@media(max-width:520px){
+  #nuellieUnifiedUnlock .unlock-currency-symbol{opacity:.07;}
 }
 @media(prefers-reduced-motion:reduce){
-  #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!important;will-change:auto;}
+  #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!important;}
 }
-body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!important;will-change:auto;}
+body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!important;}
+
+/* Subscription controls only: retain the previous page/table arrangement. */
+#subList .subscription-compact-actions{gap:3px!important;align-items:center;}
+#subList .subscription-compact-actions .btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  box-sizing:border-box;width:24px;height:24px;min-width:24px;min-height:24px;
+  padding:0!important;border-radius:6px;font-size:11px!important;
+  line-height:1!important;flex-shrink:0;
+}
+#subList .subscription-category-icon{
+  font-size:16px;overflow:hidden;white-space:nowrap;text-align:center;
+}
+@media(max-width:520px){
+  #subList .subscription-compact-actions .btn{
+    width:22px;height:22px;min-width:22px;min-height:22px;font-size:10.5px!important;
+  }
+}
 </style>
 <script id="nuellie-unified-unlock-controller">
 (function(){
@@ -9265,6 +9254,13 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     sremove(k){try{sessionStorage.removeItem(k)}catch(e){}}
   };
   let currentView='';
+  const viewportMeta=document.querySelector('meta[name="viewport"]');
+  const originalViewport=viewportMeta?viewportMeta.getAttribute('content'):'';
+  function setUnlockViewport(active){
+    if(!viewportMeta)return;
+    const wanted=active?(originalViewport.replace(/,?\s*viewport-fit\s*=\s*[^,]+/gi,'')+',viewport-fit=cover'):originalViewport;
+    if(viewportMeta.getAttribute('content')!==wanted)viewportMeta.setAttribute('content',wanted);
+  }
   function hasValidPin(){return /^\d{4}$/.test(safe.get(PIN_KEY)||'');}
   function hasValidBio(){return safe.get(BIO_FLAG)==='1' && !!safe.get(BIO_CREDENTIAL);}
   function hasLock(){
@@ -9279,6 +9275,7 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     document.body&&document.body.classList.remove('nuellie-pin-selected');
   }
   function unfreezeApp(){
+    setUnlockViewport(false);
     hideOldLockers();
     html.classList.remove('app-secure-checking','app-secure-pending','nuellie-force-locked');
     html.classList.add('nuellie-unlocked');
@@ -9299,10 +9296,14 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     root=document.createElement('div');
     root.id='nuellieUnifiedUnlock';
     root.setAttribute('aria-hidden','true');
-    root.innerHTML='<div class="unlock-currency-field" aria-hidden="true">'+
-      ['₵','$','€','£','¥','₵','$','€','£','₵','¥','$'].map((symbol,i)=>
-      '<span class="unlock-currency-symbol unlock-currency-'+(i+1)+'">'+symbol+'</span>').join('')+
-      '</div><div class="unlock-card" role="dialog" aria-modal="true"><div id="nuellieUnifiedUnlockBody"></div></div>';
+    const currencies=['₵','$','€','£','¥','₵','$','€','£','₵','¥','$','₵','€','₵','£','$','¥','₵','$','€','£','₵','¥','₵','$','£','€'];
+    const placements=[[6,9],[83,14],[12,31],[89,34],[7,51],[83,69],[20,79],[55,7],[44,91],[91,54],[5,86],[74,46],[32,6],[67,90],[17,64],[93,85],[36,24],[62,68],[70,24],[31,92],[3,70],[95,20],[43,57],[74,81],[48,11],[24,45],[58,94],[87,5]];
+    const currencyLayer='<div class="unlock-currency-field" aria-hidden="true">'+currencies.map((symbol,i)=>{
+      const [x,y]=placements[i];
+      const style='--cx:'+x+'%;--cy:'+y+'%;--cs:'+(20+(i*7%17))+'px;--cd:-'+(i%13)+'s;--ct:'+(15+(i%7))+'s';
+      return '<span class="unlock-currency-symbol" style="'+style+'">'+symbol+'</span>';
+    }).join('')+'</div>';
+    root.innerHTML=currencyLayer+'<div class="unlock-card" role="dialog" aria-modal="true"><div id="nuellieUnifiedUnlockBody"></div></div>';
     document.body.appendChild(root);
     root.addEventListener('click',function(e){
       const action=e.target.closest&&e.target.closest('[data-unlock-action]');
@@ -9321,6 +9322,7 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     return root;
   }
   function openOverlay(){
+    setUnlockViewport(true);
     hideOldLockers();lockPrivacy();
     const root=ensureOverlay();root.classList.add('open');root.setAttribute('aria-hidden','false');
   }
