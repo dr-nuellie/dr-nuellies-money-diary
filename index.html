@@ -9235,6 +9235,10 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     width:22px;height:22px;min-width:22px;min-height:22px;font-size:10.5px!important;
   }
 }
+#nuellieUnifiedUnlock .unlock-currency-symbol.unlock-cedi-symbol{
+  color:var(--pink);font-size:clamp(20px,4.5vw,38px)!important;
+  opacity:.2;letter-spacing:-.8px;font-weight:900;
+}
 </style>
 <script id="nuellie-unified-unlock-controller">
 (function(){
@@ -9254,13 +9258,7 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     sremove(k){try{sessionStorage.removeItem(k)}catch(e){}}
   };
   let currentView='';
-  const viewportMeta=document.querySelector('meta[name="viewport"]');
-  const originalViewport=viewportMeta?viewportMeta.getAttribute('content'):'';
-  function setUnlockViewport(active){
-    if(!viewportMeta)return;
-    const wanted=active?(originalViewport.replace(/,?\s*viewport-fit\s*=\s*[^,]+/gi,'')+',viewport-fit=cover'):originalViewport;
-    if(viewportMeta.getAttribute('content')!==wanted)viewportMeta.setAttribute('content',wanted);
-  }
+  // Keep the original viewport unchanged; only the unlock overlay is full-screen.
   function hasValidPin(){return /^\d{4}$/.test(safe.get(PIN_KEY)||'');}
   function hasValidBio(){return safe.get(BIO_FLAG)==='1' && !!safe.get(BIO_CREDENTIAL);}
   function hasLock(){
@@ -9275,11 +9273,12 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     document.body&&document.body.classList.remove('nuellie-pin-selected');
   }
   function unfreezeApp(){
-    setUnlockViewport(false);
     hideOldLockers();
     html.classList.remove('app-secure-checking','app-secure-pending','nuellie-force-locked');
     html.classList.add('nuellie-unlocked');
-    const u=$('nuellieUnifiedUnlock'); if(u){u.classList.remove('open');u.setAttribute('aria-hidden','true');}
+    // Fully detach the unlock layer; hiding alone left an invisible hit target on iOS.
+    const u=$('nuellieUnifiedUnlock');
+    if(u){u.classList.remove('open');u.setAttribute('aria-hidden','true');u.remove();}
     safe.sset(SESSION_KEY,'1');
     if(!window.__nuellieInterestPromptBooted){window.__nuellieInterestPromptBooted=true;setTimeout(()=>{try{if(typeof autoCredit==='function')autoCredit();}catch(e){console.warn('Interest reminder unavailable',e);}},900);}
     try{safe.sset('nuellieBioUnlocked','1')}catch(e){}
@@ -9296,12 +9295,12 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     root=document.createElement('div');
     root.id='nuellieUnifiedUnlock';
     root.setAttribute('aria-hidden','true');
-    const currencies=['₵','$','€','£','¥','₵','$','€','£','₵','¥','$','₵','€','₵','£','$','¥','₵','$','€','£','₵','¥','₵','$','£','€'];
+    const currencies=['GH₵','€','¥','₦','£','₹','₵','$','₩','₱','CHF','฿','₺','R$','GH₵','₽','₴','₪','₣','₲','₵','kr','₡','A$','₸','₮','د.إ','C$'];
     const placements=[[6,9],[83,14],[12,31],[89,34],[7,51],[83,69],[20,79],[55,7],[44,91],[91,54],[5,86],[74,46],[32,6],[67,90],[17,64],[93,85],[36,24],[62,68],[70,24],[31,92],[3,70],[95,20],[43,57],[74,81],[48,11],[24,45],[58,94],[87,5]];
     const currencyLayer='<div class="unlock-currency-field" aria-hidden="true">'+currencies.map((symbol,i)=>{
       const [x,y]=placements[i];
       const style='--cx:'+x+'%;--cy:'+y+'%;--cs:'+(20+(i*7%17))+'px;--cd:-'+(i%13)+'s;--ct:'+(15+(i%7))+'s';
-      return '<span class="unlock-currency-symbol" style="'+style+'">'+symbol+'</span>';
+      return '<span class="unlock-currency-symbol'+(symbol.includes('₵')?' unlock-cedi-symbol':'')+'" style="'+style+'">'+symbol+'</span>';
     }).join('')+'</div>';
     root.innerHTML=currencyLayer+'<div class="unlock-card" role="dialog" aria-modal="true"><div id="nuellieUnifiedUnlockBody"></div></div>';
     document.body.appendChild(root);
@@ -9322,7 +9321,6 @@ body.reduce-motion #nuellieUnifiedUnlock .unlock-currency-symbol{animation:none!
     return root;
   }
   function openOverlay(){
-    setUnlockViewport(true);
     hideOldLockers();lockPrivacy();
     const root=ensureOverlay();root.classList.add('open');root.setAttribute('aria-hidden','false');
   }
